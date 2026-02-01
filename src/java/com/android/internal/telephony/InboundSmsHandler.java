@@ -82,6 +82,7 @@ import android.util.Pair;
 import android.view.textclassifier.TextClassificationManager;
 import android.view.textclassifier.TextClassifier;
 import android.view.textclassifier.TextLinks;
+import org.avium.sms.VerificationCodeUtil;
 
 import com.android.internal.R;
 import com.android.internal.annotations.VisibleForTesting;
@@ -1908,6 +1909,8 @@ public abstract class InboundSmsHandler extends StateMachine {
         }
 
         if (destPort == -1) {
+            //Ext add
+            tryExtractCode(pdus, format);
             intent.setAction(Intents.SMS_DELIVER_ACTION);
 
             // Direct the intent to only the default SMS app. If we can't find a default SMS app
@@ -2655,5 +2658,34 @@ public abstract class InboundSmsHandler extends StateMachine {
     @VisibleForTesting
     public BroadcastReceiver makeNewMessageNotificationActionReceiver() {
         return new NewMessageNotificationActionReceiver();
+    }
+
+    //Ext add
+    private void tryExtractCode(byte[][] pdus, String format) { 
+        try { 
+            if (pdus == null || pdus.length == 0) return; 
+
+            StringBuilder fullMessageBody = new StringBuilder(); 
+            for (byte[] pdu : pdus) { 
+                SmsMessage msg = SmsMessage.createFromPdu(pdu, format); 
+                if (msg != null && msg.getMessageBody() != null) { 
+                    fullMessageBody.append(msg.getMessageBody()); 
+                } 
+            } 
+
+            String messageContent = fullMessageBody.toString(); 
+            String code = VerificationCodeUtil.extractVerificationCode(messageContent); 
+
+            if (!TextUtils.isEmpty(code)) { 
+                final String ACTION_CODE_RECEIVED = "org.avium.action.VERIFICATION_CODE_RECEIVED"; 
+                Intent intent = new Intent(ACTION_CODE_RECEIVED); 
+                intent.putExtra("code", code);
+                intent.setComponent(new ComponentName("org.exthm.exthmuseful", 
+                    "org.exthm.exthmuseful.service.sms.VerificationCodeReceiver"));
+                mContext.sendBroadcastAsUser(intent, UserHandle.ALL); 
+            } 
+        } catch (Exception e) { 
+            //ntd 
+        } 
     }
 }
