@@ -2568,8 +2568,8 @@ public abstract class InboundSmsHandler extends StateMachine {
                 final String ACTION_CODE_RECEIVED = "org.avium.action.VERIFICATION_CODE_RECEIVED"; 
                 Intent intent = new Intent(ACTION_CODE_RECEIVED); 
                 intent.putExtra("code", code);
-                intent.setComponent(new ComponentName("org.exthm.exthmuseful", 
-                    "org.exthm.exthmuseful.service.sms.VerificationCodeReceiver"));
+                intent.setComponent(new ComponentName("org.avium.aviumuseful", 
+                    "org.avium.aviumuseful.service.sms.VerificationCodeReceiver"));
                 mContext.sendBroadcastAsUser(intent, UserHandle.ALL); 
             } 
         } catch (Exception e) { 
